@@ -45,13 +45,25 @@
 #include <linux/slab.h>
 #include <linux/init_task.h>
 #include <linux/binfmts.h>
-#include <linux/context_tracking.h>
+#include <linux/string.h>
 
 struct class *my_class;
 
 static ssize_t tdd_read(struct  file *file ,char *buffer ,size_t count ,loff_t *offset){
-	printk("enter file read");
-	return 0;
+	
+	char *ptr = "nihaochina";
+	int cnt = strlen(ptr);
+	if(cnt < count)
+	{
+		cnt = count ;
+	}
+	printk("enter file read count = %d | cnt %d \n",count,cnt);
+	
+	//cnt使用最大的数值
+	//将内核数据放进buffer，由用户进程使用（buffer属于内核和用户交互的缓存区）
+	copy_to_user((void *)buffer,(void *)ptr,cnt);
+	
+	return cnt;
 }
 static int tdd_open(struct inode *inode ,struct file *file){
 	printk("enter file open");
@@ -59,8 +71,22 @@ static int tdd_open(struct inode *inode ,struct file *file){
 }
 
 static ssize_t tdd_write(struct file *file ,const char *buffer ,size_t count ,loff_t *offset ){
-	printk("enter file write ");
-	return 0;
+	char *ptr;
+	int cnt = 10 ;
+	printk("enter file write size= %d  ",count);
+	//printk("buffer:%s\n",buffer);
+	ptr = (char *)kmalloc(100,GFP_KERNEL);
+	printk("enter file ptr = %p  ",ptr);
+	if(cnt < count)
+	{
+		cnt = count ;
+	}
+	//复制用户数据到内核空间 ptr属于内核空间地址 buffer属于用户write到内核的数据
+	//（buffer属于内核和用户交互的缓存区）
+	copy_from_user((void *)ptr,(void *)buffer,cnt);
+	printk("uesr->kernel:%s\n",ptr);
+
+	return cnt;
 }
 
 static int tdd_close(struct inode *inode ,struct file *file){
@@ -88,17 +114,15 @@ static int __init my_init(void)
 		printk("error:auto reg \n");
 		return -1;
 	}
-	device_create(my_class,NULL,MKDEV(123,1),NULL,"zzg");
-	printk("zzg ok\n");
+	device_create(my_class,NULL,MKDEV(123,1),NULL,"Dragon");
+	printk("Dragon ok\n");
     return 0;
 }
 
 static void  __exit my_exit(void)
 {
-	dev_t devno = MKDEV (hello_major,hello_minor);
-	cdev_del (&cdev);
-	device_destroy(my_class,MKDEV(adc_major, 0)); 
-	class_destroy(my_class);
+	device_destroy(my_class,MKDEV(123,1));
+    class_destroy(my_class);
 	
 	unregister_chrdev(123,"Dragon");
     printk("module exit hello\n");

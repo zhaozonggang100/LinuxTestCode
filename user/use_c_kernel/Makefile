@@ -10,8 +10,8 @@ clean:
 insmod:
 	insmod $(module_name).ko
 rmmod:
-	rmmod module_name
+	rmmod $(module_name).ko
 ir:
 	insmod $(module_name).ko
 	sleep 1
-	rmmod module_name
+	rmmod $(module_name).ko
