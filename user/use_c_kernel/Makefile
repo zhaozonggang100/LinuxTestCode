@@ -1,4 +1,4 @@
-module_name=kernel
+module_name=my_ctl
 obj-m := $(module_name).o
 myHello := module
 kdir := /lib/modules/4.9.39/build
