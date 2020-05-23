@@ -7,9 +7,9 @@ all:
 	make -I $(myinclude) -C $(kdir) SUBDIRS=$(PWD) modules
 clean:
 	rm -rf *.ko Module.* *.mod.* modules.* *.o
-insmod:
+i:
 	insmod $(module_name).ko
-rmmod:
+r:
 	rmmod $(module_name).ko
 ir:
 	insmod $(module_name).ko

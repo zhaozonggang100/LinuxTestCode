@@ -26,7 +26,7 @@ int main()
 	write(fd,buf_w,buf_size);
 	printf("wriite_size= %d  buf_size= %d \n",write_size,buf_size);
 	
-	ioctl(fd,TDD_TRON);
+	ioctl(fd,1,2);
 	
 	close(fd);
 	return 0;

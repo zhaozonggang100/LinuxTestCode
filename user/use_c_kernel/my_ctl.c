@@ -53,15 +53,16 @@ static ssize_t tdd_read(struct  file *file ,char *buffer ,size_t count ,loff_t *
 	
 	char *ptr = "nihaochina";
 	int cnt = strlen(ptr);
+	int res;
 	if(cnt < count)
 	{
 		cnt = count ;
 	}
-	printk("enter file read count = %d | cnt %d \n",count,cnt);
+	printk("enter file read count = %ld | cnt %d \n",count,cnt);
 	
 	//cnt使用最大的数值
 	//将内核数据放进buffer，由用户进程使用（buffer属于内核和用户交互的缓存区）
-	copy_to_user((void *)buffer,(void *)ptr,cnt);
+	res = copy_to_user((void *)buffer,(void *)ptr,cnt);
 	
 	return cnt;
 }
@@ -72,8 +73,8 @@ static int tdd_open(struct inode *inode ,struct file *file){
 
 static ssize_t tdd_write(struct file *file ,const char *buffer ,size_t count ,loff_t *offset ){
 	char *ptr;
-	int cnt = 10 ;
-	printk("enter file write size= %d  ",count);
+	int cnt = 10 ,res;
+	printk("enter file write size= %ld ",count);
 	//printk("buffer:%s\n",buffer);
 	ptr = (char *)kmalloc(100,GFP_KERNEL);
 	printk("enter file ptr = %p  ",ptr);
@@ -83,14 +84,30 @@ static ssize_t tdd_write(struct file *file ,const char *buffer ,size_t count ,lo
 	}
 	//复制用户数据到内核空间 ptr属于内核空间地址 buffer属于用户write到内核的数据
 	//（buffer属于内核和用户交互的缓存区）
-	copy_from_user((void *)ptr,(void *)buffer,cnt);
+	res = copy_from_user((void *)ptr,(void *)buffer,cnt);
 	printk("uesr->kernel:%s\n",ptr);
 
 	return cnt;
 }
 
 static int tdd_close(struct inode *inode ,struct file *file){
-	printk("enter file close");
+	printk("enter file close\n");
+	return 0;
+}
+// long (*unlocked_ioctl) (struct file *, unsigned int, unsigned long);
+//cmd 来自应用层ioctl(fd,cmd1,cmd2,cmd3 ...);
+static long tdd_ioctl(struct inode *inode, unsigned int cmd, unsigned long arg){
+	printk("enter file ioctl cmd=%ld  arg=%ld \n",cmd,arg);
+	switch(cmd){
+		case 1://传输一个数字 选择命令咋执行
+		printk("ioctl cmd 1\n");
+		break;
+		
+		case 2:
+		printk("ioctl cmd 2\n");
+		break;
+	}
+	
 	return 0;
 }
 struct file_operations tdd_fops={
@@ -98,7 +115,9 @@ struct file_operations tdd_fops={
 	.read = tdd_read ,
 	.open = tdd_open,
 	.write = tdd_write,
+	.unlocked_ioctl = tdd_ioctl,
 	.release = tdd_close ,
+	
 };
 
 static int __init my_init(void)
