@@ -55,9 +55,9 @@ static void buttons_timer_function(unsigned long data)
 	if (!pindesc)
 		return;
 	
-	pinval = s3c2410_gpio_getpin(pindesc->pin);
+	pinval = s3c2410_gpio_getpin(pindesc->pin);//获取按键是0还是1
 
-	if (pinval)
+	if (pinval)//如果有事件发生 使用input_event(上报事件)2 上报同步事件
 	{
 		/* 松开 : 最后一个参数: 0-松开, 1-按下 */
 		input_event(buttons_dev, EV_KEY, pindesc->key_val, 0);
@@ -93,9 +93,9 @@ static int buttons_init(void)
 	input_register_device(buttons_dev);
 	
 	/* 4. 硬件相关的操作 */
-	init_timer(&buttons_timer);
-	buttons_timer.function = buttons_timer_function;
-	add_timer(&buttons_timer);
+	init_timer(&buttons_timer);//定时器相关的函数
+	buttons_timer.function = buttons_timer_function;//定时器相关的函数
+	add_timer(&buttons_timer);//定时器相关的函数
 	
 	for (i = 0; i < 4; i++)
 	{

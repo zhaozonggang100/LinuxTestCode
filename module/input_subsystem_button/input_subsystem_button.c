@@ -21,19 +21,21 @@ static struct input_dev *buttons_dev;
 
 static int buttons_init(void)
 {
-	//int i;
+	//int i ;
 	
 	/* 1. 分配一个input_dev结构体 */
 	buttons_dev = input_allocate_device();;
-
+	if(buttons_dev == NULL)
+	{
+		printk("input_dev faild \n");
+	}
 	/* 2. 设置 */
 	/* 2.1 能产生哪类事件 */
-	set_bit(EV_KEY, buttons_dev->evbit);
-	//set_bit(EV_REP, buttons_dev->evbit);
-	
+	//set_bit(KEY_A, buttons_dev->evbit);
 	/* 2.2 能产生这类操作里的哪些事件: L,S,ENTER,LEFTSHIT */
+	//set_bit(KEY_B, buttons_dev->keybit);//注册了一个按键事件
 	set_bit(KEY_A, buttons_dev->keybit);//注册了一个按键事件
-	set_bit(700, buttons_dev->keybit);//注册了一个按键事件
+
 	
 	//测试验证下，可以设置多少个按键值
 	
@@ -41,10 +43,10 @@ static int buttons_init(void)
 	//set_bit(KEY_ENTER, buttons_dev->keybit);
 	//set_bit(KEY_LEFTSHIFT, buttons_dev->keybit);
 
-	/* 3. 注册 */
+	/* 3. 注册 */   
 	//会在/dev/input产生一个event
 	//crw-rw----  1 root input 13, 70 5月  29 21:47 event6
-	input_register_device(buttons_dev);
+	printk("ret = %d \n",input_register_device(buttons_dev));
 	
 	/* 4. 硬件相关的操作 */
 	//init_timer(&buttons_timer);

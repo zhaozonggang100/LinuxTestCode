@@ -55,10 +55,10 @@ int main(int argc, char **argv)
 		printf("Can not open keyboard input file\n");
 		return -1;
 	}
-	for (i = 0; i < 50; i++) {
+	for (i = 0; i < 25; i++) {
 		printf("模拟按下键盘A键 \n");
-		sleep(4);
-        simulate_key(fd_kbd, 700);    //模拟按下键盘A键
+		sleep(2);
+        simulate_key(fd_kbd, KEY_A);    //模拟按下键盘A键
 		
 	}
 	close(fd_kbd);
