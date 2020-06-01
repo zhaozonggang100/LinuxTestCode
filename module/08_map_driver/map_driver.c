@@ -121,22 +121,26 @@ int map_fault(struct vm_area_struct *vma,struct vm_fault *vmf)
 	offset = vmf->virtual_address - vma->vm_start;
 	virt_start = (unsigned long)vmalloc_area + (unsigned long)(vmf->pgoff << PAGE_SHIFT);
 	pfn_start = (unsigned long)vmalloc_to_pfn((void *)virt_start);
-	
+	//offset[0] virt_start[18446659146109161472] pfn_start[235806] 
+	printk("offset[%lu] virt_start[%lu] pfn_start[%lu] \n",offset ,virt_start,pfn_start);
 	if((vma==NULL)||(vmalloc_area==NULL)){
 		printk("return VM_FAULT_SIGBUS!\n");
 		return VM_FAULT_SIGBUS;
 	}
+	//offset大小必须和申请的一致可以
 	if(offset >=MAPLEN){
 		printk("return VM_FAULT_SIGBUS!");
 		return VM_FAULT_SIGBUS;
 	}
 	
 	page_ptr=vmalloc_area + offset;
-	page=vmalloc_to_page(page_ptr);
-	get_page(page);	
+	page=vmalloc_to_page(page_ptr);//得到物理页面对应的地址
+	printk("page_ptr[%p] page[%p] vmf->page[%p]\n",page_ptr ,page,vmf->page);
+	//page_ptr[ffffb2c2408c1000] page[ffffef5c40e64780] vmf->page[          (null)]
+	get_page(page);//增加page的引用次数。
 	vmf->page=page; //非常重要完成缺页中断的 页帧号的建立
 	printk("%s: map 0x%lx (0x%016lx) to 0x%lx , size: 0x%lx, page:%ld \n", __func__, virt_start, pfn_start << PAGE_SHIFT, vmf->virtual_address,PAGE_SIZE,vmf->pgoff);
-
+    //map_fault: map 0xffffb2c2408c1000 (0x000000003991e000) to 0x7f6266aab000 , size: 0x1000, page:0 
 	
 	
 	
