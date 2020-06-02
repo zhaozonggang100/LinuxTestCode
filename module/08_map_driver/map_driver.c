@@ -98,7 +98,7 @@ static int tdd_mmap(struct file *file, struct vm_area_struct *vma)
 static int tdd_close(struct inode *inode ,struct file *file){
 	printk("enter file close\n");
 	return 0;
-}
+}    
 void map_vopen(struct vm_area_struct *vma)  
 {  
     printk("mapping vma is opened..\n");
@@ -108,6 +108,7 @@ void map_vclose(struct vm_area_struct *vma)
 {  
     printk("mapping vma is closed..\n");
 }
+
 /*
 //将用内核空间的地址（物理地址） 映射到用户空间的线性地址
 第一步找到物理页框

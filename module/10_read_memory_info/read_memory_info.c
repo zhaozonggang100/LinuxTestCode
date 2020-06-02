@@ -66,6 +66,7 @@ static int __init my_init(void)
 			continue;
 		valid++;
 		p = pfn_to_page(pfn);
+		//printk("page[%lu] add[%lx] \n",i ,p);
 		if(!p)
 			continue;
 		if(!page_count(p))
@@ -107,7 +108,7 @@ static int __init my_init(void)
 			mappedtodisk++;
 		}		
 	}
-	printk("slab[%lu] locked[%lu] dirty[%lu]\n",slab,locked,dirty);
+	printk("slab[%lu] locked[%lu] dirty[%lu] reserved[%lu]\n",slab,locked,dirty,reserved);
     return 0;
 }
 
