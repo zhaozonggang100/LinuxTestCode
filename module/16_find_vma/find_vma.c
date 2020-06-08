@@ -53,19 +53,31 @@
 
 static int __init my_init(void)
 {
+	/*
+	struct mm_struct 0xffff93aa36280f80
+		mmap = 0xffff93aa001123c0,
+	struct vm_area_struct 0xffff93aa001123c0
+		struct vm_area_struct {
+		vm_start = 4194304, 
+		vm_end = 4198400, 
+		vm_next = 0xffff93aa001120c0, 
+		vm_prev = 0x0, 
+	*/
     struct mm_struct *mm ;
 	unsigned long addr ;
 	struct vm_area_struct *vma ,*vma01;
 	mm = current->mm;//获取当前进程的mm_struct结构体指针
 	addr = mm->mmap->vm_next->vm_start + 1;
-	vma01 = mm->mmap;
+	//vma01 = mm->mmap;
+	vma01 = (struct vm_area_struct *)0xffff93aa001123c0;
 	/*
 	计算有多少个vma_area_struct 区域
 	*/  
 	//链表的头地址
 	while(vma01)
 	{
-		printk("add:[%lx] len[%lx]\n",vma01->vm_next,vma01->vm_end - vma01->vm_start );
+		printk("add:[%lx] len[%lx] start[%lx] end[%lx]\n",vma01->vm_next,vma01->vm_end - vma01->vm_start ,\
+										vma01->vm_start,vma01->vm_end);
 		vma01 = vma01->vm_next;
 	}
 	printk("pid: %d\n",current->pid);
