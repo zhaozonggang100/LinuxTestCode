@@ -50,14 +50,49 @@
 
 //static struct dentry *seq_file_demo_dir;
 //static int int_pid;
-
+struct pid *pid_g;
+struct task_struct *task_g;
+struct mm_struct *mm_struct_g;
+struct vm_area_struct *vm_area_struct_g;
 //module_param(int_pid,int,0644);
+
+ 
+static int print_task_struct_fun(struct seq_file *seq, void *v)
+{
+	//seq_printf(seq, "%s", "skb status info start:\n");
+	seq_printf(seq, "***********task_struct***********\n");
+	seq_printf(seq, "task_struct address: 0x%lx\n",task_g);
+	seq_printf(seq, "pid        : %d\n",task_g->pid);
+	seq_printf(seq, "maj_flt    : %d\n",task_g->maj_flt);
+	seq_printf(seq, "min_flt    : %d\n",task_g->min_flt);
+	return 0;
+}
+
+static int print_vm_area_struct_fun(struct seq_file *seq, void *v)
+{
+	seq_printf(seq, "***********vm_area_struct***********\n");
+	seq_printf(seq, "vm_area_struct address: 0x%lx\n",mm_struct_g);
+	seq_printf(seq, "hiwater_rss : %d\n",atomic_read(&mm_struct_g->hiwater_rss));
+	seq_printf(seq, "file_page   : %d\n",atomic_read(&mm_struct_g->rss_stat.count[0]));
+	seq_printf(seq, "anon_page   : %d\n",atomic_read(&mm_struct_g->rss_stat.count[1]));
+	seq_printf(seq, "swap_page   : %d\n",atomic_read(&mm_struct_g->rss_stat.count[2]));
+	seq_printf(seq, "shmem_page  : %d\n",atomic_read(&mm_struct_g->rss_stat.count[3]));
+	return 0;
+}
 
 static int seq_file_demo_show(struct seq_file *seq, void *v)
 {
-        seq_printf(seq, "Hello World\n");
+	    //先获取进程的task_struct
+		pid_g = find_get_pid(1);
+		task_g = pid_task(pid_g,PIDTYPE_PID);
+		mm_struct_g = task_g->mm;
+		//打印task_struct
+		print_task_struct_fun(seq,NULL);
+		//打印vm_area_struct
+		print_vm_area_struct_fun(seq,NULL);
+        //seq_printf(seq, "Hello World\n");
 		//seq_printf(seq,(char *)&int_pid);
-		seq_printf(seq, "Hello World123\n");
+		seq_printf(seq, "*********2************\n");
         return 0;
 }
 
@@ -133,7 +168,7 @@ ok 信息只能传递 一个字符
 			printk("********\n");
 			return -EFAULT;
 		}
-	} vv
+	} 
 	printk("########\n");
 	return count;
 		
@@ -164,4 +199,4 @@ static void __exit seq_file_demo_exit(void)
 
 module_init(seq_file_demo_init);
 module_exit(seq_file_demo_exit);
-MODULE_LICENSE("G);
+MODULE_LICENSE("GPL");
