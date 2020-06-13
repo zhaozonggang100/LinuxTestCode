@@ -47,6 +47,7 @@
 #include <linux/init_task.h>
 #include <linux/binfmts.h>
 #include <linux/string.h>
+//#include <linux/stdlib.h>
 
 //static struct dentry *seq_file_demo_dir;
 //static int int_pid;
@@ -54,6 +55,7 @@ struct pid *pid_g;
 struct task_struct *task_g;
 struct mm_struct *mm_struct_g;
 struct vm_area_struct *vm_area_struct_g;
+int pid_g_g = 0;
 //module_param(int_pid,int,0644);
 
  
@@ -63,36 +65,98 @@ static int print_task_struct_fun(struct seq_file *seq, void *v)
 	seq_printf(seq, "***********task_struct***********\n");
 	seq_printf(seq, "task_struct address: 0x%lx\n",task_g);
 	seq_printf(seq, "pid        : %d\n",task_g->pid);
+	seq_printf(seq, "name       : %s\n",task_g->comm);
 	seq_printf(seq, "maj_flt    : %d\n",task_g->maj_flt);
 	seq_printf(seq, "min_flt    : %d\n",task_g->min_flt);
 	return 0;
-}
+} 
 
 static int print_vm_area_struct_fun(struct seq_file *seq, void *v)
 {
+
+	unsigned long int hiwater_rss , all_phy_,file_page,anon_page,swap_page,shmem_page;
+	hiwater_rss = atomic_read(&mm_struct_g->hiwater_rss);
+	file_page = atomic_read(&mm_struct_g->rss_stat.count[0]);
+	anon_page = atomic_read(&mm_struct_g->rss_stat.count[1]);
+	swap_page = atomic_read(&mm_struct_g->rss_stat.count[2]);
+	shmem_page = atomic_read(&mm_struct_g->rss_stat.count[3]);
+	all_phy_ = (file_page +  anon_page) * 4;
 	seq_printf(seq, "***********vm_area_struct***********\n");
 	seq_printf(seq, "vm_area_struct address: 0x%lx\n",mm_struct_g);
-	seq_printf(seq, "hiwater_rss : %d\n",atomic_read(&mm_struct_g->hiwater_rss));
-	seq_printf(seq, "file_page   : %d\n",atomic_read(&mm_struct_g->rss_stat.count[0]));
-	seq_printf(seq, "anon_page   : %d\n",atomic_read(&mm_struct_g->rss_stat.count[1]));
-	seq_printf(seq, "swap_page   : %d\n",atomic_read(&mm_struct_g->rss_stat.count[2]));
-	seq_printf(seq, "shmem_page  : %d\n",atomic_read(&mm_struct_g->rss_stat.count[3]));
-	return 0;
+	seq_printf(seq, "hiwater_rss : %ld\n",hiwater_rss);
+	seq_printf(seq, "all_phy_    : %ld\n",all_phy_);
+	seq_printf(seq, "file_page   : %ld\n",file_page);
+	seq_printf(seq, "anon_page   : %ld\n",anon_page);
+	seq_printf(seq, "swap_page   : %ld\n",swap_page);
+	seq_printf(seq, "shmem_page  : %ld\n",shmem_page);
+	//计算vmd
+	unsigned long int vm_len=0 , i=0 ;
+	while(vm_area_struct_g)
+	{
+		
+		vm_len = vm_area_struct_g->vm_end - vm_area_struct_g->vm_start + vm_len ;
+		printk("vm_len [%ld]  [%ld] [%ld]\n   ",i++, vm_len ,vm_len/1024);
+		
+		printk(" [%ld]  [%lx] \n",vm_area_struct_g->vm_end , vm_area_struct_g->vm_start);
+		vm_area_struct_g = vm_area_struct_g->vm_next;
+	}
+	seq_printf(seq, "vm_addr   : %ld\n",vm_len/1024);
+	return 0; 
 }
 
+static int print_all_process(struct seq_file *seq, void *v)
+{
+	int kernel_count = 0;
+	int user_count = 0;
+	struct task_struct *p;
+	p = &init_task;
+	for_each_process(p)
+	{
+		if(p->mm == NULL)
+		{  
+			
+			printk("comm=%s , pid=%d \n",p->comm,p->pid);
+			kernel_count++;
+			
+		}
+		else
+		{
+			printk("*****************comm=%s , pid=%d \n",p->comm,p->pid);
+			user_count++;
+		}
+	}
+	seq_printf(seq, "kernel_process  : %d \n",kernel_count);
+	seq_printf(seq, "user_process    : %d \n",user_count);
+ 
+	return 0;
+}
 static int seq_file_demo_show(struct seq_file *seq, void *v)
 {
 	    //先获取进程的task_struct
-		pid_g = find_get_pid(1);
+		if(pid_g_g == 0)
+		{
+			seq_printf(seq, "input <pid>\n");
+			return 0;
+		}
+		pid_g = find_get_pid(pid_g_g);
+		
+		if(pid_g == NULL)
+		{
+			seq_printf(seq, "pid is missing \n");
+			return 0;
+		}
 		task_g = pid_task(pid_g,PIDTYPE_PID);
 		mm_struct_g = task_g->mm;
+		vm_area_struct_g = mm_struct_g->mmap;
 		//打印task_struct
 		print_task_struct_fun(seq,NULL);
 		//打印vm_area_struct
 		print_vm_area_struct_fun(seq,NULL);
+		//遍历所用进程
+		//print_all_process(seq,NULL);
         //seq_printf(seq, "Hello World\n");
 		//seq_printf(seq,(char *)&int_pid);
-		seq_printf(seq, "*********2************\n");
+		seq_printf(seq, "************end************\n");
         return 0;
 }
 
@@ -109,7 +173,7 @@ static ssize_t seq_file_demo_write(struct file *file,
 /*
    int day, year;
    char weekday[20], month[20], dtm[100];
-   strcpy( dtm, "Saturday March 25 1989" );
+   strcpy( dtm, "Saturaturday March 25 1989" );
    sscanf( dtm, "%s %s %d  %d", weekday, month, &day, &year );
 
    printf("%s %d, %d = %s\n", month, day, year, weekday );
@@ -161,11 +225,25 @@ ok 信息只能传递 一个字符
 	*/
 	if(count)
 	{
-		char *ptr;
-		int buflen = count;
-		if(copy_from_user(ptr , buf ,buflen))
+		char ptr[27];
+		int buflen ;
+		memset(ptr,0,27);
+		if(count > 26)
+			buflen = 26;
+		else
+			buflen = count;
+		if(!copy_from_user((char *)ptr , buf ,buflen))
 		{
 			printk("********\n");
+			if(kstrtouint(ptr,10,&pid_g_g))
+			{
+				return -EFAULT;
+			}
+			
+			return buflen;
+		}
+		else
+		{
 			return -EFAULT;
 		}
 	} 
