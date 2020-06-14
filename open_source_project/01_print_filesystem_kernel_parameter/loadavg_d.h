@@ -17,8 +17,8 @@ static int print_kernel_global_variables(struct seq_file *seq, void *v)
 {
 	//uptime uproc 命令通过avenrun数组获取值
     ptr_avenrun = (void *)kallsyms_lookup_name("avenrun");//获取内核变量的地址
-	printk("avenrun = %s ",ptr_avenrun);
-	
+	printk("avenrun1 = 0x%p ",ptr_avenrun);
+	//printk("avenrun2 = %lx ",ptr_avenrun);
 	seq_printf(seq,"Load: %lu.%02lu, %lu.%02lu, %lu.%02lu\n",
 			LOAD_INT(ptr_avenrun[0]), LOAD_FRAC(ptr_avenrun[0]),
 			LOAD_INT(ptr_avenrun[1]), LOAD_FRAC(ptr_avenrun[1]),
