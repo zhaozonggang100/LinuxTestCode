@@ -3,10 +3,7 @@
 #include <linux/time.h>
 #include <linux/mm.h>
 #include <linux/module.h>
-#include <linux/nmi.h>
 #include <linux/init.h>
-#include <linux/uaccess.h>
-#include <linux/highmem.h>
 #include <linux/interrupt.h>
 #include <linux/capability.h>
 #include <linux/completion.h>
@@ -47,10 +44,13 @@
 #include <linux/init_task.h>
 #include <linux/binfmts.h>
 #include <linux/string.h>
-//#include <linux/stdlib.h>
 
-//static struct dentry *seq_file_demo_dir;
-//static int int_pid;
+#include "loadavg_d.h"
+#include "task_struct_d.h"
+#include "vm_area_struct_d.h"
+#include "all_process_d.h"
+
+
 struct pid *pid_g;
 struct task_struct *task_g;
 struct mm_struct *mm_struct_g;
@@ -59,77 +59,8 @@ int pid_g_g = 0;
 //module_param(int_pid,int,0644);
 
  
-static int print_task_struct_fun(struct seq_file *seq, void *v)
-{
-	//seq_printf(seq, "%s", "skb status info start:\n");
-	seq_printf(seq, "***********task_struct***********\n");
-	seq_printf(seq, "task_struct address: 0x%lx\n",task_g);
-	seq_printf(seq, "pid        : %d\n",task_g->pid);
-	seq_printf(seq, "name       : %s\n",task_g->comm);
-	seq_printf(seq, "maj_flt    : %d\n",task_g->maj_flt);
-	seq_printf(seq, "min_flt    : %d\n",task_g->min_flt);
-	return 0;
-} 
 
-static int print_vm_area_struct_fun(struct seq_file *seq, void *v)
-{
 
-	unsigned long int hiwater_rss , all_phy_,file_page,anon_page,swap_page,shmem_page;
-	hiwater_rss = atomic_read(&mm_struct_g->hiwater_rss);
-	file_page = atomic_read(&mm_struct_g->rss_stat.count[0]);
-	anon_page = atomic_read(&mm_struct_g->rss_stat.count[1]);
-	swap_page = atomic_read(&mm_struct_g->rss_stat.count[2]);
-	shmem_page = atomic_read(&mm_struct_g->rss_stat.count[3]);
-	all_phy_ = (file_page +  anon_page) * 4;
-	seq_printf(seq, "***********vm_area_struct***********\n");
-	seq_printf(seq, "vm_area_struct address: 0x%lx\n",mm_struct_g);
-	seq_printf(seq, "hiwater_rss : %ld\n",hiwater_rss);
-	seq_printf(seq, "all_phy_    : %ld\n",all_phy_);
-	seq_printf(seq, "file_page   : %ld\n",file_page);
-	seq_printf(seq, "anon_page   : %ld\n",anon_page);
-	seq_printf(seq, "swap_page   : %ld\n",swap_page);
-	seq_printf(seq, "shmem_page  : %ld\n",shmem_page);
-	//计算vmd
-	unsigned long int vm_len=0 , i=0 ;
-	while(vm_area_struct_g)
-	{
-		
-		vm_len = vm_area_struct_g->vm_end - vm_area_struct_g->vm_start + vm_len ;
-		printk("vm_len [%ld]  [%ld] [%ld]\n   ",i++, vm_len ,vm_len/1024);
-		
-		printk(" [%ld]  [%lx] \n",vm_area_struct_g->vm_end , vm_area_struct_g->vm_start);
-		vm_area_struct_g = vm_area_struct_g->vm_next;
-	}
-	seq_printf(seq, "vm_addr   : %ld\n",vm_len/1024);
-	return 0; 
-}
-
-static int print_all_process(struct seq_file *seq, void *v)
-{
-	int kernel_count = 0;
-	int user_count = 0;
-	struct task_struct *p;
-	p = &init_task;
-	for_each_process(p)
-	{
-		if(p->mm == NULL)
-		{  
-			
-			printk("comm=%s , pid=%d \n",p->comm,p->pid);
-			kernel_count++;
-			
-		}
-		else
-		{
-			printk("*****************comm=%s , pid=%d \n",p->comm,p->pid);
-			user_count++;
-		}
-	}
-	seq_printf(seq, "kernel_process  : %d \n",kernel_count);
-	seq_printf(seq, "user_process    : %d \n",user_count);
- 
-	return 0;
-}
 static int seq_file_demo_show(struct seq_file *seq, void *v)
 {
 	    //先获取进程的task_struct
@@ -149,12 +80,13 @@ static int seq_file_demo_show(struct seq_file *seq, void *v)
 		mm_struct_g = task_g->mm;
 		vm_area_struct_g = mm_struct_g->mmap;
 		//打印task_struct
-		print_task_struct_fun(seq,NULL);
+		print_task_struct_fun( seq, NULL, task_g);
 		//打印vm_area_struct
-		print_vm_area_struct_fun(seq,NULL);
+		print_vm_area_struct_fun(seq,NULL,mm_struct_g);
 		//遍历所用进程
-		//print_all_process(seq,NULL);
-        //seq_printf(seq, "Hello World\n");
+		print_all_process(seq,NULL);
+		//打印内核全局变量
+		print_kernel_global_variables(seq,NULL);
 		//seq_printf(seq,(char *)&int_pid);
 		seq_printf(seq, "************end************\n");
         return 0;
@@ -168,44 +100,7 @@ static int seq_file_demo_open(struct inode *inode, struct file *file)
 static ssize_t seq_file_demo_write(struct file *file, 
 				const char *buf ,size_t count, loff_t *pos)
 {
-    //int val;
-    //ssize_t (*write)(struct file *, const char *, size_t, loff_t *);
-/*
-   int day, year;
-   char weekday[20], month[20], dtm[100];
-   strcpy( dtm, "Saturaturday March 25 1989" );
-   sscanf( dtm, "%s %s %d  %d", weekday, month, &day, &year );
 
-   printf("%s %d, %d = %s\n", month, day, year, weekday );
-
-
-    if(sscanf(buffer, "%d", &val) != 1)
-        return -EINVAL;
-
-    if(val == 1)
-        printk("proc_test1 write true  [%d]\n",val);
-    else 
-        printk("proc_test1 write false [%d]\n",val);
-
-    return val;
-	*/
- /*       char *ptr;
-        int cnt = 10 ,res;
-        printk("enter file write size= %ld ",count);
-        //printk("buffer:%s\n",buffer);
-        ptr = (char *)kmalloc(100,GFP_KERNEL);
-        printk("enter file ptr = %p  ",ptr);
-        if(cnt < count)
-        {
-                cnt = count ;
-        }
-        //复制用户数据到内核空间 ptr属于内核空间地址 buffer属于用户write到内核的数据
-        //（buffer属于内核和用户交互的缓存区）
-        res = copy_from_user((void *)ptr,(void *)buffer,cnt);
-        printk("uesr->kernel:%s\n",ptr);
-
-        return cnt;
-*/
 /*
 参考：drvices/tty/sysrq.c
 ok 信息只能传递 一个字符
