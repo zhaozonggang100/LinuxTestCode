@@ -49,6 +49,8 @@
 #include "task_struct_d.h"
 #include "vm_area_struct_d.h"
 #include "all_process_d.h"
+#include "cpu_loadavg_d.h"
+#include "slabinfo_d.h"
 
 
 struct pid *pid_g;
@@ -89,6 +91,9 @@ static int seq_file_demo_show(struct seq_file *seq, void *v)
 		print_kernel_global_variables(seq,NULL);
 		//seq_printf(seq,(char *)&int_pid);
 		seq_printf(seq, "************end************\n");
+		//打印cpu参数属性。
+		print_cpu_loadavg( seq, NULL);
+		print_slabinfo(seq, NULL);
         return 0;
 }
 

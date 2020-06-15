@@ -22,7 +22,7 @@ static int print_all_process(struct seq_file *seq, void *v)
 		{
 			printk("*****************comm=%s , pid=%d \n",p->comm,p->pid);
 			user_count++;
-		}
+		} 
 	}
 	seq_printf(seq, "kernel_process  : %d \n",kernel_count);
 	seq_printf(seq, "user_process    : %d \n",user_count);
