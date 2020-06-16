@@ -5,7 +5,7 @@
 
 char *mem_spvm = NULL;
 struct kmem_cache *my_cachep = NULL;
- 
+void *object = NULL;
 static int __init my_init(void)
 {
     my_cachep = kmem_cache_create("zhaogang",35,0,SLAB_HWCACHE_ALIGN,NULL);
@@ -13,8 +13,14 @@ static int __init my_init(void)
 		printk("failed!!\n");
 	else
 	{
-		printk("add:[%p] size[%d] \n",my_cachep,kmem_cache_size(my_cachep));
 		
+		printk("add:[%p] size[%d] \n",my_cachep,kmem_cache_size(my_cachep));
+		object = kmem_cache_alloc(my_cachep,GFP_KERNEL);
+		if(object == NULL)
+		{
+			printk("dddddddddddddd\n");
+		}
+		printk("add:[%p] size[%d] 0x%lx \n",my_cachep,kmem_cache_size(my_cachep),(unsigned long )object);
 	}
 	  
     return 0;
