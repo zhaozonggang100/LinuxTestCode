@@ -15,7 +15,7 @@ int d_module(void)
 static int __init init_mod(void)
 {
 	
-	const char *name = "sys_call_table";
+	const char *name = "function_one";//查找导出的符号表
 	struct kernel_symbol *ksymbol;
 	struct module * owner;
 	const unsigned long *crc;
