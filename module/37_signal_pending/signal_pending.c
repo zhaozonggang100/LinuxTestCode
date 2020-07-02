@@ -11,15 +11,18 @@ static int slam_func(void *data)
 	allow_signal(SIGKILL);
 	mdelay(1000);
 	//检查当前进程是否有信号处理，返回不为0表示有信号需要处理。
-	while(!signal_pending(current) && !kthread_should_stop())
+	//signal_pending(current)
+	while(!0 && !kthread_should_stop())
 	{
 		printk("<xinu>jiffies(%lu)\n",jiffies);
 		printk("zhaozonggang [%d]\n",signal_pending(current));
 		set_current_state(TASK_INTERRUPTIBLE);
 		schedule_timeout(msecs_to_jiffies(5000));
 	}
-
 	printk("<xinu>leave slam_func!\n");
+	mdelay(9000);
+
+
 	is_signal_exited = 1;
 
 	return 0;
@@ -27,7 +30,7 @@ static int slam_func(void *data)
 
 static __init int kthread_signal_example_init(void)
 {
-	slam_thread = kthread_run(slam_func, NULL, "slam");
+	slam_thread = kthread_run(slam_func, NULL, "Dragon");
 	printk("<xinu>kthread_signal_example_init()!\n");
 
 	return 0;
