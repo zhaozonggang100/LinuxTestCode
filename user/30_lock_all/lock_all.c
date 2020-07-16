@@ -4,6 +4,10 @@
 #include <errno.h>
 #include <unistd.h>
 #include <time.h>
+#include <sys/time.h>  
+
+
+
 
 #define COUNT 16
 unsigned long sum =  0;
@@ -12,18 +16,47 @@ unsigned long sum =  0;
 pthread_mutex_t mutex;
 pthread_mutex_t mutex01 = PTHREAD_MUTEX_INITIALIZER;//静态创建锁
 
-
 //添加自旋锁
 pthread_spinlock_t spinlock;
 
 //添加读写锁
 pthread_rwlock_t rwlock;
 
+
+//时间回调函数
+void sysLocalTime()  
+{  
+    time_t             timesec;  
+    struct tm         *p;  
+
+    time(&timesec);
+    p = localtime(&timesec);  
+
+    printf("%d%d%d%d%d%d\n", 1900+p->tm_year, 1+p->tm_mon, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);  
+
+} 
+
+void sysUsecTime()  
+{  
+    struct timeval    tv;  
+    struct timezone tz;  
+    struct tm         *p;  
+
+    gettimeofday(&tv, &tz);  
+    //printf("tv_sec:%ld\n",tv.tv_sec);  
+    //printf("tv_usec:%ld\n",tv.tv_usec);  
+    //printf("tz_minuteswest:%d\n",tz.tz_minuteswest);  
+    //printf("tz_dsttime:%d\n",tz.tz_dsttime);  
+    p = localtime(&tv.tv_sec);  
+    printf("time_now:%d/%d/%d %d:%d:%d.%3ld\n", 1900+p->tm_year, 1+p->tm_mon, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec, tv.tv_usec);  
+}
+
+
 void * thread(void *arg)
 {
 
 	int i=0;
-#if 0
+#if 1
 	//自旋锁 感觉耗时   死等 不做切换，临界区尽量小
 	pthread_spin_lock(&spinlock);
     for(i=0; i< 100000000 ;i++)
@@ -85,6 +118,12 @@ void * thread(void *arg)
 }
 int main()
 {
+	//初始化时间函数
+	sysLocalTime();
+	
+	//打印此时的函数
+	sysUsecTime();
+	
 	printf("before ... sum = %lu \n",sum);
 	pthread_t pthread[COUNT];
 	int ret;
@@ -125,5 +164,6 @@ int main()
 	pthread_rwlock_destroy(&rwlock);
 	
 	printf("after....sum [%lu]\n",sum);
+	sysUsecTime();
 	return 0;
 }
