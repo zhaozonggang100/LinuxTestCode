@@ -1,18 +1,32 @@
-#include <stdlib.h>
 #include <stdio.h>
-#include <unistd.h>
 
-/*
-例子：#define barrier() __asm__ __volatile__("": : :"memory")
-#define __asm__ asm
-#define __volatile__ volatile
-__asm__(汇编语句模板: 输出部分: 输入部分: 破坏描述部分)
-*/
-int main()
+#define GPKCON 0x7f008800
+#define GPKDAT 0x7f008808
+ 
+void main()
 {
-	char *p = NULL;
-	int cr0 = 10;
-	printf(" i = %d \n",cr0);
-	__asm__ __volatile__("movl %0, %%cr0"::"a" (cr0)); 
+    int i = 10;
+    int a = i;
+ 
+    printf("i = %d", a);
+ /*
+     __asm__ (
+		"" 正常语法
+		"" 正常语法
+        :  输出部分
+		:  输入部分
+		:  破坏部分
+    );
+ */
+    __asm__ ( 
+		"ldr eax, =0x1110000\n" 
+		"str eax, [%0]\n"
+		"ldr eax, =0xa0\n"
+		"str eax, [%1]\n"
+        :
+		:"=a"(GPKCON),"r"(GPKDAT)
+		:"=eax"
+    );
+	
 	return 0;
 }
