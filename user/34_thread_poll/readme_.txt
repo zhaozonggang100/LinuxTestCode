@@ -1,0 +1,1 @@
+gcc main.c threadpool.h threadpool.c -lpthread
