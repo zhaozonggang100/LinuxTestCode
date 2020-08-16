@@ -37,7 +37,7 @@ static long __percpu *cpualloc;
 
 static int __init my_oops_init(void)
 {
-	int cpu ;
+	int cpu , id;
 	printk("dragon init \n");
 	/*
 	for_each_online_cpu()//现在在线的CPU个数 循环遍历
@@ -58,13 +58,21 @@ static int __init my_oops_init(void)
 	//	修改其中一个perCPU 数据为20
 	__this_cpu_write(cpuvar, 20);
 	
+	/*
+	list = __this_cpu_read(tasklet_vec.head);
+	id = get_cpu();
+	      point = smp_processor_id();
+	使用 node = cpu_to_node(cpu * point)
+	*/
+	
+	
 	cpualloc = alloc_percpu(long);
 	
 	//为这个变量设置所有CPU变量
 	for_each_online_cpu(cpu){
 		//获取数据并赋值
 		*per_cpu_ptr(cpualloc, cpu)= 100;
-		printk("02:[%d] [%ld] \n",cpu ,*per_cpu_ptr(cpualloc, cpu));
+		printk("02:[%d] [%ld] [%d]\n",cpu ,*per_cpu_ptr(cpualloc, cpu), __this_cpu_read(cpuvar));
 	}
 	
 	return 0;
